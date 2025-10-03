@@ -15,11 +15,53 @@ type registerRequest struct {
 	Name     string `json:"name" binding:"required,min=2"`
 }
 
+type loginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
+}
+
+type loginResponse struct {
+	Token string `json:"token"`
+}
+
+func (app *application) loginUser(c *gin.Context) {
+	var login loginRequest
+
+	if err := c.ShouldBindJSON(&login); err != nil {
+		app.badRequest(c, err)
+		return
+	}
+
+	user, err := app.models.Users.GetByEmail(login.Email)
+
+	if err != nil {
+		app.badRequest(c, err)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password))
+
+	if err != nil {
+		app.badRequest(c, err)
+		return
+	}
+
+	token, err := app.generateJWT(user.Id)
+
+	if err != nil {
+		app.serverError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, loginResponse{Token: token})
+}
+
 func (m *application) registerUser(c *gin.Context) {
 	var register registerRequest
 
-	if err := c.ShouldBindJSON(&register); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	err := m.readJSON(c.Writer, c.Request, &register)
+	if err != nil {
+		m.badRequest(c, err)
 		return
 	}
 
@@ -28,7 +70,7 @@ func (m *application) registerUser(c *gin.Context) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(register.Password), bcrypt.DefaultCost)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+		m.serverError(c, err)
 		return
 	}
 
@@ -44,7 +86,7 @@ func (m *application) registerUser(c *gin.Context) {
 
 	if err != nil {
 		log.Print(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		m.serverError(c, err)
 		return
 	}
 

@@ -12,13 +12,26 @@ func (app *application) routes() http.Handler {
 	v1 := g.Group("/api/v1")
 
 	{
-		v1.POST(eventsPath, app.createEvent)
+
 		v1.GET(eventsPath, app.getAllEvents)
 		v1.GET(eventIDPath, app.getEvent)
-		v1.PUT(eventIDPath, app.updateEvent)
-		v1.DELETE(eventIDPath, app.deleteEvent)
 
 		v1.POST("/auth/register", app.registerUser)
+		v1.POST("/auth/login", app.loginUser)
+	}
+
+	protectedRoutes := v1.Group("/")
+	protectedRoutes.Use(app.middleware())
+
+	{
+		protectedRoutes.GET(eventAttendeesPath, app.getAttendees)
+		protectedRoutes.POST(eventsPath, app.createEvent)
+		protectedRoutes.PUT(eventIDPath, app.updateEvent)
+		protectedRoutes.DELETE(eventIDPath, app.deleteEvent)
+
+		protectedRoutes.POST(eventAttendeeIDPath, app.addAttendee)
+		protectedRoutes.DELETE(eventAttendeeIDPath, app.deleteAttendee)
+
 	}
 
 	return g

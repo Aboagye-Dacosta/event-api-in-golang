@@ -2,7 +2,6 @@ package main
 
 import (
 	"first-rest-api/internal/database"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -12,15 +11,16 @@ import (
 func (app *application) createEvent(ctx *gin.Context) {
 	var event database.Event
 
-	if err := ctx.ShouldBindJSON(&event); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	err := app.readJSON(ctx.Writer, ctx.Request, &event)
+	if err != nil {
+		app.badRequest(ctx, err)
 		return
 	}
 
-	err := app.models.Events.Insert(&event)
+	err = app.models.Events.Insert(&event)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create event"})
+		app.serverError(ctx, err)
 		return
 	}
 
@@ -32,7 +32,7 @@ func (app *application) getAllEvents(ctx *gin.Context) {
 	events, err := app.models.Events.GetAll()
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve events"})
+		app.serverError(ctx, err)
 		return
 	}
 
@@ -43,19 +43,14 @@ func (app *application) getEvent(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Event id is invalid"})
+		app.badRequest(ctx, err)
 		return
 	}
 
 	event, err := app.models.Events.Get(id)
 
-	if event == nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "Event not found"})
-		return
-	}
-
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve event"})
+		app.notFound(ctx)
 		return
 	}
 
@@ -66,34 +61,29 @@ func (app *application) updateEvent(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Event id is invalid"})
+		app.badRequest(ctx, err)
 		return
 	}
 
-	existingEvent, err := app.models.Events.Get(id)
+	_, err = app.models.Events.Get(id)
 
 	if err != nil {
-		log.Println(err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve event"})
-		return
-	}
-
-	if existingEvent == nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "Event not found"})
+		app.notFound(ctx)
 		return
 	}
 
 	var updatedEvent database.Event
 
-	if err := ctx.ShouldBindJSON(&updatedEvent); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	err = app.readJSON(ctx.Writer, ctx.Request, &updatedEvent)
+	if err != nil {
+		app.badRequest(ctx, err)
 		return
 	}
 
 	updatedEvent.Id = id
 
 	if err := app.models.Events.Update(&updatedEvent); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update event"})
+		app.editConflict(ctx)
 		return
 	}
 
@@ -104,27 +94,22 @@ func (app *application) deleteEvent(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Event id is not valid"})
+		app.badRequest(ctx, err)
 		return
 	}
 
-	existingEvent, err := app.models.Events.Get(id)
+	_, err = app.models.Events.Get(id)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve event"})
-		return
-	}
-
-	if existingEvent == nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Event was not found"})
+		app.notFound(ctx)
 		return
 	}
 
 	if err := app.models.Events.Delete(id); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete event"})
+		app.serverError(ctx, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, existingEvent)
+	ctx.JSON(http.StatusOK, gin.H{"message": "event deleted successfully"})
 
 }
