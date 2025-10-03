@@ -24,6 +24,17 @@ type loginResponse struct {
 	Token string `json:"token"`
 }
 
+// loginUser godoc
+// @Summary      Login user
+// @Description  Login a user
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        login body loginRequest true "Login data"
+// @Success      200  {object} loginResponse
+// @Failure      400  {object} ErrorResponse
+// @Failure      500  {object} ErrorResponse
+// @Router       /api/v1/auth/login [post]
 func (app *application) loginUser(c *gin.Context) {
 	var login loginRequest
 
@@ -56,6 +67,17 @@ func (app *application) loginUser(c *gin.Context) {
 	c.JSON(http.StatusOK, loginResponse{Token: token})
 }
 
+// registerUser godoc
+// @Summary      Register user
+// @Description  Register a new user
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        register body registerRequest true "Register data"
+// @Success      201  {object} database.User
+// @Failure      400  {object} ErrorResponse
+// @Failure      500  {object} ErrorResponse
+// @Router       /api/v1/auth/register [post]
 func (m *application) registerUser(c *gin.Context) {
 	var register registerRequest
 

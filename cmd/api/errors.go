@@ -6,11 +6,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type ErrorResponse struct {
+	Error   string `json:"error"`
+	Details string `json:"details,omitempty"`
+}
+
 func (app *application) errorResponse(c *gin.Context, status int, message string, details string) {
-	c.JSON(status, gin.H{
-		"error":   message,
-		"details": details,
-	})
+	c.JSON(status, ErrorResponse{Error: message, Details: details})
 }
 
 func (app *application) badRequest(c *gin.Context, err error) {

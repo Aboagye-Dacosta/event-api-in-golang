@@ -13,7 +13,7 @@ type EventModel struct {
 
 type Event struct {
 	Id          int    `json:"id"`
-	OwnerId     int    `json:"ownerId" binding:"required"`
+	OwnerId     int    `json:"ownerId"`
 	Name        string `json:"name" binding:"required,min=3"`
 	Description string `json:"description" binding:"required,min=10"`
 	Location    string `json:"location" binding:"required,min=3"`
@@ -42,12 +42,13 @@ func (m *EventModel) GetAll() ([]*Event, error) {
 		return nil, err
 	}
 	defer rows.Close()
+
 	events := []*Event{}
 
 	for rows.Next() {
 		var event Event
 
-		err := rows.Scan(&event.Id, &event.OwnerId, &event.Name, &event.Description, &event.Location, &event.Date)
+		err := rows.Scan(&event.Id, &event.OwnerId, &event.Name, &event.Description, &event.Date, &event.Location)
 		if err != nil {
 			return nil, err
 		}
@@ -83,7 +84,7 @@ func (m *EventModel) Get(id int) (*Event, error) {
 
 	var event Event
 
-	err := row.Scan(&event.Id, &event.OwnerId, &event.Name, &event.Description, &event.Location, &event.Date)
+	err := row.Scan(&event.Id, &event.OwnerId, &event.Name, &event.Description, &event.Date, &event.Location)
 
 	if err != nil {
 		log.Println("No event found with id", id, err)

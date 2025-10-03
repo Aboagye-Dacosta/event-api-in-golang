@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"first-rest-api/internal/database"
 	"io"
 	"net/http"
 
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -84,4 +86,15 @@ func (app *application) verifyJWT(tokenString string) (*int, error) {
 	}
 	userIdInt := int(userId)
 	return &userIdInt, nil
+}
+
+func (app *application) getUser(c *gin.Context) (*database.User, error) {
+	user, exists := c.Get("user")
+
+	if !exists {
+		return nil, errors.New("user not found in context")
+	}
+
+	return user.(*database.User), nil
+
 }
