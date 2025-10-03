@@ -16,5 +16,3 @@ This is a simple REST API built with Go. It is a simple CRUD API that allows use
 ```bash
 git clone https://github.com/aboagye/first-rest-api-in-go.git
 ```
-
-### 2.
