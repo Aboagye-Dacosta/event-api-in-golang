@@ -14,5 +14,7 @@ This is a simple REST API built with Go. It is a simple CRUD API that allows use
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/aboagye/event-api-in-golang.git
+git clone https://github.com/aboagye-dacosta/event-api-in-golang.git
 ```
+
+![Api-image](assets/api-img.png)
